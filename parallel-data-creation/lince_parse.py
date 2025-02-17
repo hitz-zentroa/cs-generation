@@ -37,9 +37,13 @@ def parse_conll(file_path, partition):
                     sentences_dev.append(current_sentence)
 
 def process_sentences(sentences):
+    output_sentences = []
+    
     for sentence in sentences:
         tokens = ""
         tags = []
+        
+
         if len(sentence[0]) == 2:
             for token, tag in sentence:
                 tokens += " " + token
@@ -50,8 +54,9 @@ def process_sentences(sentences):
                 tags.append(tag)
         
         if (tags.count("lang1") >= 2 and tags.count("lang2") >= 2) or (tags.count("eng") >= 2 and tags.count("spa") >= 2):
-            print(tokens.strip())
+            output_sentences.append(tokens.strip()) 
 
+    return output_sentences
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
@@ -81,15 +86,14 @@ if __name__ == "__main__":
                 parse_conll(path_current, "test")
 
 
+    with open(rootdir+'/lince_train.tsv', 'w') as f:
+        for line in process_sentences(sentences_train):
+            f.write(line+"\n")
 
-    with open(rootdir+'lince_train.tsv', 'w') as f:
-        for line in sentences_train:
-            f.write(line)
-
-    with open(rootdir+'lince_dev.tsv', 'w') as f:
-        for line in sentences_dev:
-            f.write(line)
+    with open(rootdir+'/lince_dev.tsv', 'w') as f:
+        for line in process_sentences(sentences_dev):
+            f.write(line+"\n")
     
-    with open(rootdir+'lince_test.tsv', 'w') as f:
-        for line in sentences_test:
-            f.write(line)
+    with open(rootdir+'/lince_test.tsv', 'w') as f:
+        for line in process_sentences(sentences_test):
+            f.write(line+"\n")

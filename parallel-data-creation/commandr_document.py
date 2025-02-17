@@ -13,14 +13,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     in_path = args.input_file
-    lang = args.output_lang
-    shot = args.shot
 
     model_id = "CohereForAI/c4ai-command-r-v01"
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     model = AutoModelForCausalLM.from_pretrained(model_id,device_map="auto") 
 
-    output_path = in_path[48:-4]+f"_monolingual.tsv"
+    output_path = in_path[48:-4]+f".monolingual.tsv"
 
     initial_batch_size = 32  
     min_batch_size = 4 
