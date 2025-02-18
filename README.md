@@ -24,8 +24,11 @@ bash parallel-data-creation/parallel-data-creation.sh "path-to-lince-directory"
 
 ## Download dataset
 The parallel corpus *EN2CS* can be downloaded here: [https://ixa2.si.ehu.eus/mheredia/EN2CS.zip](https://ixa2.si.ehu.eus/mheredia/EN2CS.zip)
+It is also available on HuggingFace: [https://huggingface.co/datasets/HiTZ/EN2CS](https://huggingface.co/datasets/HiTZ/EN2CS)
+
 
 The final dataset includes changes beyond the scope of the scripts, as a subset of the test set has been post-edited and with that subset, the splits have been deduplicated. Consequently, the following sections assume a directory that contains the *EN2CS* dataset as provided.
+
 
 ## Fine-tuning
 The directory `fine-tuning` contains the scripts to fine-tune the different models on the task of CS generation.
@@ -47,11 +50,8 @@ To replicate all the experiments included in the paper, run:
 bash fine-tuning/all-models.sh "path-to-en2cs-directory/" "save_path"
 ```
 
-## Qualitative Evaluation
-The directory `qualitative-evaluation` contains the scripts to obtain scores and figures from the manual evaluation.
-
 ## Automatic Evaluation
-The directory `automatic-evaluation` contains the scripts to calculate the automatic metrics and the correlation with human evaluation.
+The directory `automatic-evaluation` contains the scripts to calculate the automatic metrics.
 
 Example to evaluate a model on the test set:
 ```
@@ -65,5 +65,3 @@ The paper that explains the dataset and experiments can be cited as follows:
 @inproceedings{
 }
 ```
-
-# License
