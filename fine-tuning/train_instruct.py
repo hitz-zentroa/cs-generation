@@ -1,44 +1,12 @@
 # INITIAL IMPORTS
 import numpy as np
-
-import wandb
-
 import torch
-
 from peft import LoraConfig, prepare_model_for_kbit_training, get_peft_model
-
 from transformers import AutoTokenizer, AutoModelForCausalLM, EarlyStoppingCallback,BitsAndBytesConfig
 from trl import SFTTrainer, SFTConfig
 import argparse
+from load_parallel import *
 
-from utils.load_parallel import *
-
-# Tokenization function
-
-
-# # Preprocessing function to tokenize 'text' (input) and 'label' (output)
-# # Tokenization Function
-# def preprocess_function(examples):
-#     inputs = examples["EN"]
-#     targets = examples["CS"]
-#     model_inputs = tokenizer(inputs, max_length=512, truncation=True, padding="max_length")
-    
-#     # Setup the tokenizer for targets
-#     labels = tokenizer(targets, max_length=150, truncation=True, padding="max_length").input_ids
-#     model_inputs["labels"] = labels
-#     return model_inputs
-
-
-
-
-
-# # Compute metrics function
-# def compute_metrics(eval_results):
-#     """
-#     Function to compute all metrics
-#     """
-#     perplexity = math.exp(eval_results['eval_loss'])
-#     return {"perplexity":perplexity}
 
 
 def train_formatting_function(data):
@@ -48,12 +16,6 @@ def train_formatting_function(data):
     full_text = []
     
     for i in range(len(data['CS'])):
-
-
-        # formated_sen_instruct = [
-        #     {"role": "user", "content":f"Provide a brief counter-narrative in response to the user's hate speech. Ensure the output does not contain line breaks.{data['HS'][i]}"},
-        #     {"role": "assistant", "content":data['CN'][i]}
-        #     ]
 
         formated_sen_chat = [
         {"role": "system", "content": "You are a bilingual speaker of English and Spanish. Translate the following English sentence into code-switched text between both languages:"},
@@ -72,22 +34,24 @@ def train_formatting_function(data):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--dataset_path", type=float)
     parser.add_argument("--model", type=str)
     parser.add_argument("--model_type", type=str)
     parser.add_argument("--lr", type=float)
+    parser.add_argument("--save_path", type=float)
     args = parser.parse_args()
 
     model_chk = args.model
     model_type = args.model_type
     lr = args.lr
+    save_path = args.save_path
+    dataset_path = args.dataset_path
 
 
     #SET SEEDS
     torch.manual_seed(42)
     np.random.seed(42)
     
-    save_folder = "first_results"
-    corpus = "lince"
 
     #HIPERPARAMETERS
     bs = 32
@@ -95,20 +59,6 @@ if __name__ == "__main__":
     max_seq_length = 1024
 
 
-    #WANDB
-    wandb.init(
-    # set the wandb project where this run will be logged
-    project="paralel-lince",
-    name=f"{model_type}-{lr}-instruct",  # name of the W&B run (optional)
-    # track hyperparameters and run metadata
-    config={
-    "learning_rate": lr,
-    "architecture": model_type,
-    "dataset": corpus,
-    "epochs": epochs,
-    "batch_size":bs,
-    },
-    )
 
     bnb_config = BitsAndBytesConfig(
         load_in_4bit= True,
@@ -146,7 +96,7 @@ if __name__ == "__main__":
     
     model = get_peft_model(model, peft_config)
 
-    dataset = load_parallel(method="base")
+    dataset = load_parallel(dataset_path)
     formated_train = dataset["train"].map(train_formatting_function, batched=True)
     formated_dev = dataset["dev"].map(train_formatting_function, batched=True)
 
@@ -154,7 +104,7 @@ if __name__ == "__main__":
 
         
     training_args = SFTConfig(dataset_text_field="text",
-            output_dir=save_folder + model_chk + str(lr) + "instruct",
+            output_dir=save_path + model_chk + str(lr),
             evaluation_strategy="epoch",
             save_strategy="epoch",
             logging_strategy="epoch",
@@ -168,11 +118,7 @@ if __name__ == "__main__":
             warmup_ratio=0.1,
             fp16=False,
             optim = "paged_adamw_8bit",
-            report_to="wandb",
-            run_name=f"{model_chk}-{lr}-instruct",  # name of the W&B run (optional)
-            logging_steps=1,
-            # remove_unused_columns=False # raises an error otherwise
-            #report_to='tensorboard',
+            logging_steps=1
         )
     
     # data_collator = DataCollatorForSeq2Seq(tokenizer, model=model, padding=True)

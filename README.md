@@ -12,9 +12,6 @@ To install all:
 pip install -r requirements.txt
 ```
 
-## Download dataset
-The parallel corpus *EN2CS* can be downloaded here: [https://ixa2.si.ehu.eus/mheredia/EN2CS.zip](https://ixa2.si.ehu.eus/mheredia/EN2CS.zip)
-
 ## Parallel data creation
 The directory `parallel-data-creation` contains the scripts to generate the parallel corpus CS - English.
 The scripts assume a directory with the original files of LINCE. The corpus will be saved in that same directory. To download the original LINCE dataset: [LINCE Benchmark](https://ritual.uh.edu/lince/).
@@ -25,11 +22,29 @@ Example of usage:
 bash parallel-data-creation/parallel-data-creation.sh "path-to-lince-directory"
 ```
 
+## Download dataset
+The parallel corpus *EN2CS* can be downloaded here: [https://ixa2.si.ehu.eus/mheredia/EN2CS.zip](https://ixa2.si.ehu.eus/mheredia/EN2CS.zip)
+
 The final dataset includes changes beyond the scope of the scripts, as a subset of the test set has been post-edited and with that subset, the splits have been deduplicated. Consequently, the following sections assume a directory that contains the *EN2CS* dataset as provided.
 
 ## Fine-tuning
 The directory `fine-tuning` contains the scripts to fine-tune the different models on the task of CS generation.
 
+
+Example usage to train a base model:
+```
+python fine-tuning/train_decoder.py --model "mistralai/Mistral-7B-v0.3" --model_type "mistral" --lr 0.0005
+```
+
+And to train an instruct model:
+```
+python fine-tuning/train_instruct.py --dataset_path "path-to-en2cs-directory/" --save_path "save_path" --model "mistralai/Mistral-7B-Instruct-v0.3" --model_type "mistral" --lr $lr
+```
+
+To replicate all the experiments included in the paper, run:
+```
+bash fine-tuning/all-models.sh "path-to-en2cs-directory/" "save_path"
+```
 
 ## Qualitative Evaluation
 The directory `qualitative-evaluation` contains the scripts to obtain scores and figures from the manual evaluation.

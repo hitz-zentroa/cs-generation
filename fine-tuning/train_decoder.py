@@ -1,40 +1,33 @@
 # INITIAL IMPORTS
 import numpy as np
-
-import wandb
-
 import torch
-
 from peft import LoraConfig, prepare_model_for_kbit_training, get_peft_model
-
 from transformers import AutoTokenizer, AutoModelForCausalLM, EarlyStoppingCallback,BitsAndBytesConfig
 from trl import SFTTrainer, SFTConfig
 import argparse
-
-from utils.load_parallel import *
-
+from load_parallel import *
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--dataset_path", type=float)
     parser.add_argument("--model", type=str)
     parser.add_argument("--model_type", type=str)
     parser.add_argument("--lr", type=float)
-    parser.add_argument("--method", type=str)
+    parser.add_argument("--save_path", type=float)
     args = parser.parse_args()
 
     model_chk = args.model
     model_type = args.model_type
     lr = args.lr
-    method = args.method
+    save_path = args.save_path
+    dataset_path = args.dataset_path
 
 
     #SET SEEDS
     torch.manual_seed(42)
     np.random.seed(42)
     
-    save_folder = "first_results"
-    corpus = "lince"
 
     #HIPERPARAMETERS
     bs = 32
@@ -42,20 +35,6 @@ if __name__ == "__main__":
     max_seq_length = 1024
 
 
-    #WANDB
-    wandb.init(
-    # set the wandb project where this run will be logged
-    project="paralel-lince",
-    name=f"{model_type}-{lr}-{method}",  # name of the W&B run (optional)
-    # track hyperparameters and run metadata
-    config={
-    "learning_rate": lr,
-    "architecture": model_type,
-    "dataset": corpus,
-    "epochs": epochs,
-    "batch_size":bs,
-    },
-    )
 
     bnb_config = BitsAndBytesConfig(
         load_in_4bit= True,
@@ -66,7 +45,7 @@ if __name__ == "__main__":
 
     model = AutoModelForCausalLM.from_pretrained(model_chk,quantization_config=bnb_config, device_map="auto")
         
-    model.config.use_cache = False # silence the warnings. Please re-enable for inference!
+    model.config.use_cache = False 
     model.config.pretraining_tp = 1
     model.gradient_checkpointing_enable()
     
@@ -93,13 +72,11 @@ if __name__ == "__main__":
     
     model = get_peft_model(model, peft_config)
 
-    dataset = load_parallel(method)
+    dataset = load_parallel(dataset_path)
 
     # TRAINING
-
-        
     training_args = SFTConfig(dataset_text_field="concat",
-            output_dir=save_folder + model_chk + str(lr) + method,
+            output_dir=save_path + model_chk + str(lr),
             evaluation_strategy="epoch",
             save_strategy="epoch",
             logging_strategy="epoch",
@@ -113,14 +90,9 @@ if __name__ == "__main__":
             warmup_ratio=0.1,
             fp16=False,
             optim = "paged_adamw_8bit",
-            report_to="wandb",
-            run_name=f"{model_chk}-{lr}-{method}",  # name of the W&B run (optional)
             logging_steps=1,
-            # remove_unused_columns=False # raises an error otherwise
-            #report_to='tensorboard',
         )
     
-    # data_collator = DataCollatorForSeq2Seq(tokenizer, model=model, padding=True)
     
     trainer = SFTTrainer(
             model=model,
@@ -133,7 +105,7 @@ if __name__ == "__main__":
             callbacks = [EarlyStoppingCallback(early_stopping_patience=5)],
             packing=False,
         )
-
+    
     trainer.train()
     model.config.use_cache = True
     eval_results = trainer.evaluate()
