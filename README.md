@@ -33,12 +33,13 @@ The directory `fine-tuning` contains the scripts to fine-tune the different mode
 
 Example usage to train a base model:
 ```
-python fine-tuning/train_decoder.py --model "mistralai/Mistral-7B-v0.3" --model_type "mistral" --lr 0.0005
+python fine-tuning/train_decoder.py --dataset_path "path-to-en2cs-directory/" --save_path "save_path" --model "mistralai/Mistral-7B-v0.3" --model_type "mistral" --lr 0.0005
 ```
+
 
 And to train an instruct model:
 ```
-python fine-tuning/train_instruct.py --dataset_path "path-to-en2cs-directory/" --save_path "save_path" --model "mistralai/Mistral-7B-Instruct-v0.3" --model_type "mistral" --lr $lr
+python fine-tuning/train_instruct.py --dataset_path "path-to-en2cs-directory/" --save_path "save_path" --model "mistralai/Mistral-7B-Instruct-v0.3" --model_type "mistral" --lr 0.0005
 ```
 
 To replicate all the experiments included in the paper, run:
@@ -51,6 +52,11 @@ The directory `qualitative-evaluation` contains the scripts to obtain scores and
 
 ## Automatic Evaluation
 The directory `automatic-evaluation` contains the scripts to calculate the automatic metrics and the correlation with human evaluation.
+
+Example to evaluate a model on the test set:
+```
+python automatic-evaluation/metrics.py --dataset_folder "path-to-en2cs-directory/" --model_folder "" --pre_trained "Undi95/Meta-Llama-3-8B-hf" --partition "test"
+```
 
 ## Citation
 The paper that explains the dataset and experiments can be cited as follows:

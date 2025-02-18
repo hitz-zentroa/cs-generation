@@ -34,11 +34,11 @@ def train_formatting_function(data):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset_path", type=float)
+    parser.add_argument("--dataset_path", type=str)
     parser.add_argument("--model", type=str)
     parser.add_argument("--model_type", type=str)
     parser.add_argument("--lr", type=float)
-    parser.add_argument("--save_path", type=float)
+    parser.add_argument("--save_path", type=str)
     args = parser.parse_args()
 
     model_chk = args.model
@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
         
     training_args = SFTConfig(dataset_text_field="text",
-            output_dir=save_path + model_chk + str(lr),
+            output_dir=save_path + model_chk + str(lr)+ "instruct",
             evaluation_strategy="epoch",
             save_strategy="epoch",
             logging_strategy="epoch",

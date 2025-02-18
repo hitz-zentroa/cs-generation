@@ -3,7 +3,11 @@ import pandas as pd
 import argparse
 from generate import *
 import statistics
-import csv
+import torch
+import os
+import numpy as np
+import nltk
+
 
 #  FUNCTIONS
 
@@ -58,18 +62,8 @@ def process_input(f,m):
     df = pd.read_csv(f,sep="\t")
     df = df
     c = []
-    if m == "base":
-        for index, row in df.iterrows():
-            new_row = "<en>" + str(row["EN"]) + "<cs>" 
-            c.append(new_row)
-    
-    elif m == "len_code":
-        for index, row in df.iterrows():
-            code = "<"+len_code(str(row["EN"]))+">"
-            new_row = "<en>"+ code + str(row["EN"]) + "<cs>" + code
-            c.append(new_row)
 
-    elif m == "equal":
+    if m == "equal":
         for index, row in df.iterrows():
             new_row = str(row["EN"]) + "=" 
             c.append(new_row)
@@ -84,102 +78,59 @@ def process_input(f,m):
 
 
 
-if __name__ == "__main__":
-    gold_dev_path = "/home/mheredia/data/code-switching/LINCE_SPA-EN/dev_drop.tsv"
-    gold_test_path = "/home/mheredia/data/code-switching/LINCE_SPA-EN/lince_test.postedited.tsv"
+if __name__ == "__main__":    
+    torch.manual_seed(42)
+    np.random.seed(42)
 
-    pred_dev_path = "/home/mheredia/data/code-switching/LINCE_SPA-EN/validation(1).MTen-cs2"
-    pred_test_path = "/home/mheredia/data/code-switching/LINCE_SPA-EN/test(1).MTen-cs2"
+    parser = argparse.ArgumentParser()
 
-    gold_dev = pd.read_csv(gold_dev_path, sep="\t",lineterminator="\n",quoting=csv.QUOTE_NONE,quotechar=None)["CS"].tolist()
-    gold_test = pd.read_csv(gold_test_path, sep="\t",lineterminator="\n",quoting=csv.QUOTE_NONE,quotechar=None)["CS"].tolist()
-
-    pred_dev = pd.read_csv(pred_dev_path, sep="\t",lineterminator="\n",quoting=csv.QUOTE_NONE)["CS"].tolist()
-    pred_test = pd.read_csv(pred_test_path, sep="\t",lineterminator="\n",quoting=csv.QUOTE_NONE)["CS"].tolist()
-
-    truncated_dev = []
-    for prediction,reference in zip(pred_dev,gold_dev):
-        truncated_dev.append(truncate(reference,prediction))
-
+    parser.add_argument("--model_folder", type=str)
+    parser.add_argument("--dataset_folder",type=str)
+    parser.add_argument("--pre_trained", type=str)
+    parser.add_argument("--partition", type=str)
     
-    bsp, blp, bcp = calculate_metrics(truncated_dev,gold_dev)
+    args = parser.parse_args()
 
+    dataset_folder = args.dataset_folder
+    model_folder = args._model_folder
+    pre_trained = args.pre_trained
+    partition = args.partition
 
-    print("Raw predictions:")
-    print(f'BLEU: {blp["bleu"]}, ChrF: {bcp["score"]}, Bert Score (F1): {statistics.mean(bsp["f1"])}')
+    if partition == "test":
+        test = model_folder+"/test.tsv"
 
-    truncated_test=[]
-    for prediction,reference in zip(pred_test,gold_test):
-        truncated_test.append(truncate(reference,prediction))
-
-    bsp, blp, bcp = calculate_metrics(truncated_test,gold_test)
-
-    print("Raw predictions:")
-    print(f'BLEU: {blp["bleu"]}, ChrF: {bcp["score"]}, Bert Score (F1): {statistics.mean(bsp["f1"])}')
-
-    
-    # torch.manual_seed(42)
-    # np.random.seed(42)
-
-    # parser = argparse.ArgumentParser()
-
-    # parser.add_argument("--folder", type=str)
-    # parser.add_argument("--pre_trained", type=str)
-    # parser.add_argument("--partition", type=str)
-    
-    # args = parser.parse_args()
-
-
-    # folder = args.folder
-    # pre_trained = args.pre_trained
-    # partition = args.partition
-
-    # if partition == "test":
-    #     test = "/home/mheredia/data/code-switching/LINCE_SPA-EN/lince_test.postedited.tsv"
-
-    # if partition == "dev":
-    #     test = "/home/mheredia/data/code-switching/LINCE_SPA-EN/dev_drop.tsv"
+    if partition == "dev":
+        test = model_folder+"/dev.tsv"
 
 
 
-    # results = {"Model":[],"BLEU":[],"ChrF":[],"BertScore":[],"BLEU_tr":[],"ChrF_tr":[],"BertScore_tr":[]}
+    results = {"Model":[],"BLEU":[],"ChrF":[],"BertScore":[],"BLEU_tr":[],"ChrF_tr":[],"BertScore_tr":[]}
 
-    # for m in os.listdir(folder):
-    #     for c in os.listdir(folder+"/"+m):
-    #         chk = folder+"/"+m+"/"+c
-    #         instruct = False
-
-    #         if m.endswith("base"):
-    #             method = "base"
+    for m in os.listdir(model_folder):
+        for c in os.listdir(model_folder+"/"+m):
+            chk = model_folder+"/"+m+"/"+c
+            instruct = False
             
-    #         elif m.endswith("len_code"):
-    #             method = "len_code"
+            if m.endswith("instruct"):
+                method = "instruct"
+                instruct = True
 
-    #         elif m.endswith("equal"):
-    #             method = "equal"
-
-    #         elif m.endswith("instruct"):
-    #             method = "instruct"
-    #             instruct = True
-
-    #         concat,references = process_input(test,method)
-    #         p, t = get_predictions(pre_trained,chk,concat,instruct)
-    #         bsp, blp, bcp = calculate_metrics(p,references)
-    #         bst, blt, bct = calculate_metrics(t,references)
+            else:
+                method = "equal"
             
-    #         results["Model"].append(m + " " + c + ":")
-    #         results["BLEU"].append(blp["bleu"])
-    #         results["ChrF"].append(bcp["score"])
-    #         results["BertScore"].append(statistics.mean(bsp["f1"]))
-    #         results["BLEU_tr"].append(blt["bleu"])
-    #         results["ChrF_tr"].append(bct["score"])
-    #         results["BertScore_tr"].append(statistics.mean(bst["f1"]))
+            concat,references = process_input(test,method)
+            p, t = get_predictions(pre_trained,chk,concat,instruct)
+            bsp, blp, bcp = calculate_metrics(p,references)
+            bst, blt, bct = calculate_metrics(t,references)
+            
+            results["Model"].append(m + " " + c + ":")
+            results["BLEU"].append(blp["bleu"])
+            results["ChrF"].append(bcp["score"])
+            results["BertScore"].append(statistics.mean(bsp["f1"]))
+            results["BLEU_tr"].append(blt["bleu"])
+            results["ChrF_tr"].append(bct["score"])
+            results["BertScore_tr"].append(statistics.mean(bst["f1"]))
 
-    #         print(m + " " + c + ":"+"\n")
-    #         print("Raw predictions:")
-    #         print(f'BLEU: {blp["bleu"]}, ChrF: {bcp["score"]}, Bert Score (F1): {statistics.mean(bsp["f1"])}')
-    #         print("Truncated predictions:")
-    #         print(f'BLEU: {blt["bleu"]}, ChrF: {bct["score"]}, Bert Score (F1): {statistics.mean(bst["f1"])}'+"\n"+"\n")
 
-    # df = pd.DataFrame(results)
-    # df.to_csv('results-dev.tsv', mode='a', index=False,sep="\t")
+    df = pd.DataFrame(results)
+    df.to_csv('results.tsv', sep="\t")
