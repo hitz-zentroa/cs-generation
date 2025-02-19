@@ -1,7 +1,7 @@
 # Conditioning LLMs to Generate Code-Switched Text: A Methodology Grounded in Naturally Occurring Data
 Code-switching (CS) is still a critical challenge in Natural Language Processing (NLP). Current Large Language Models (LLMs) struggle to interpret and generate code-switched text, primarily due to the scarcity of large-scale CS datasets for training. We present a novel methodology to generate CS data using LLMs, and test it on the English-Spanish language pair. We propose back-translating natural CS sentences into monolingual English, and using the resulting parallel corpus to fine-tune LLMs to turn monolingual sentences into CS. Unlike previous approaches to CS generation, our methodology uses natural CS data as a starting point, allowing models to learn its natural distribution beyond grammatical patterns. We thoroughly analyse the models' performance through a study on human preferences, a qualitative error analysis and an evaluation with popular automatic metrics. Results show that our methodology generates fluent code-switched text, expanding research opportunities in CS communication, and that traditional metrics do not correlate with human judgement when assessing the quality of the generated CS data. We release our code and generated dataset under a CC-BY-NC-SA license.
 
-Link to the paper: [URL]
+Link to the paper: [https://arxiv.org/abs/2502.12924](https://arxiv.org/abs/2502.12924)
 
 ## Requirements
 `requirements.txt` includes the list of dependencies.
@@ -24,6 +24,7 @@ bash parallel-data-creation/parallel-data-creation.sh "path-to-lince-directory"
 
 ## Download dataset
 The parallel corpus *EN2CS* can be downloaded here: [https://ixa2.si.ehu.eus/mheredia/EN2CS.zip](https://ixa2.si.ehu.eus/mheredia/EN2CS.zip)
+
 It is also available on HuggingFace: [https://huggingface.co/datasets/HiTZ/EN2CS](https://huggingface.co/datasets/HiTZ/EN2CS)
 
 
@@ -62,6 +63,13 @@ python automatic-evaluation/metrics.py --dataset_folder "path-to-en2cs-directory
 The paper that explains the dataset and experiments can be cited as follows:
 
 ```
-@inproceedings{
+@misc{heredia2025conditioningllmsgeneratecodeswitched,
+      title={Conditioning LLMs to Generate Code-Switched Text: A Methodology Grounded in Naturally Occurring Data}, 
+      author={Maite Heredia and Gorka Labaka and Jeremy Barnes and Aitor Soroa},
+      year={2025},
+      eprint={2502.12924},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2502.12924}, 
 }
 ```
